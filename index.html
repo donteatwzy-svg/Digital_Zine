@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Zine</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      background: rgb(94, 94, 94);
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .stage {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    img {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    #notepad {
+      display: none;
+    }
+
+    #dateLabel {
+      position: fixed;
+      right: 20px;
+      bottom: 16px;
+      font-size: 14px;
+      line-height: 1.2;
+      color: black;
+      letter-spacing: 0.02em;
+      z-index: 999;
+      user-select: none;
+      pointer-events: none;
+      font-family: Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stage">
+    <img id="zine" src="Digital_Zine_04.png" alt="Digital Zine" />
+    <img id="notepad" src="" alt="Notepad" />
+  </div>
+
+  <div id="dateLabel">January 1, 1990</div>
+
+  <script>
+    const zine = document.getElementById("zine");
+    const notepad = document.getElementById("notepad");
+    const dateLabel = document.getElementById("dateLabel");
+
+    let showingNote = false;
+    let currentKey = "";
+
+    const BREAKPOINT_1 = 600;
+    const BREAKPOINT_2 = 900;
+    const BREAKPOINT_3 = 1200;
+
+    function getCurrentSet() {
+      const width = window.innerWidth;
+
+      if (width <= BREAKPOINT_1) {
+        return {
+          key: "07",
+          zine: "Digital_Zine_07.png",
+          note: "Notepad_07.png"
+        };
+      } else if (width <= BREAKPOINT_2) {
+        return {
+          key: "06",
+          zine: "Digital_Zine_06.png",
+          note: "Notepad_06.png"
+        };
+      } else if (width <= BREAKPOINT_3) {
+        return {
+          key: "05",
+          zine: "Digital_Zine_05.png",
+          note: "Notepad_05.png"
+        };
+      } else {
+        return {
+          key: "04",
+          zine: "Digital_Zine_04.png",
+          note: "Notepad_04.png"
+        };
+      }
+    }
+
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function getInterpolatedTimestamp() {
+      const width = window.innerWidth;
+
+      const d1990 = new Date(1990, 0, 1).getTime();
+      const d2000 = new Date(2000, 0, 1).getTime();
+      const d2010 = new Date(2010, 0, 1).getTime();
+      const d2026 = new Date(2026, 0, 1).getTime();
+
+      if (width <= BREAKPOINT_1) {
+        const t = Math.max(0, Math.min(1, width / BREAKPOINT_1));
+        return lerp(d1990, d2000, t);
+      }
+
+      if (width <= BREAKPOINT_2) {
+        const t = (width - BREAKPOINT_1) / (BREAKPOINT_2 - BREAKPOINT_1);
+        return lerp(d2000, d2010, t);
+      }
+
+      if (width <= BREAKPOINT_3) {
+        const t = (width - BREAKPOINT_2) / (BREAKPOINT_3 - BREAKPOINT_2);
+        return lerp(d2010, d2026, t);
+      }
+
+      return d2026;
+    }
+
+    function formatDate(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric"
+      });
+    }
+
+    function updateDate() {
+      const timestamp = getInterpolatedTimestamp();
+      dateLabel.textContent = formatDate(timestamp);
+    }
+
+    function updateImages() {
+      const set = getCurrentSet();
+
+      if (currentKey !== set.key) {
+        currentKey = set.key;
+
+        zine.src = set.zine;
+
+        showingNote = false;
+        notepad.style.display = "none";
+        zine.style.display = "block";
+      } else {
+        if (showingNote) {
+          notepad.src = set.note;
+          notepad.style.display = "block";
+          zine.style.display = "none";
+        } else {
+          zine.src = set.zine;
+          zine.style.display = "block";
+          notepad.style.display = "none";
+        }
+      }
+
+      updateDate();
+    }
+
+    function toggle() {
+      const set = getCurrentSet();
+
+      if (!showingNote) {
+        notepad.src = set.note;
+        notepad.style.display = "block";
+        zine.style.display = "none";
+        showingNote = true;
+      } else {
+        notepad.style.display = "none";
+        zine.src = set.zine;
+        zine.style.display = "block";
+        showingNote = false;
+      }
+    }
+
+    window.addEventListener("resize", updateImages);
+    document.body.addEventListener("click", toggle);
+
+    const initialSet = getCurrentSet();
+    currentKey = initialSet.key;
+    zine.src = initialSet.zine;
+    updateDate();
+  </script>
+
+</body>
+</html>
